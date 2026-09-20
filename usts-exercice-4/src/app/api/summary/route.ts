@@ -1,19 +1,23 @@
 import { NextResponse } from "next/server";
-import { readFile } from "fs/promises";
-import path from "path";
+import prisma from "@/lib/db";
 
 export async function GET() {
   try {
-    const filePath = path.join(process.cwd(), "public", "mails-today.json");
-    const fileContents = await readFile(filePath, "utf-8");
-    const data = JSON.parse(fileContents);
-    const summary = data.summary || "Aucun résumé disponible.";
-    return NextResponse.json({ summary });
+    const summary = await prisma.summary.findFirst({ orderBy: { date: "desc" } });
+    return NextResponse.json(summary || { content: "Aucun résumé disponible." });
   } catch (error) {
-    console.error("Erreur lors de la lecture du résumé:", error);
-    return NextResponse.json(
-      { error: "Impossible de charger le résumé" },
-      { status: 500 }
-    );
+    console.error("Erreur:", error);
+    return NextResponse.json({ error: "Impossible de charger le résumé" }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const { content } = await request.json();
+    const summary = await prisma.summary.create({ data: { content } });
+    return NextResponse.json(summary, { status: 201 });
+  } catch (error) {
+    console.error("Erreur:", error);
+    return NextResponse.json({ error: "Impossible de créer le résumé" }, { status: 500 });
   }
 }

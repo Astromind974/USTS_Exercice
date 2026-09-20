@@ -1,4 +1,5 @@
-import type { Config } from "tailwindcss";
+// tailwind.config.ts
+import type { Config } from "@tailwindcss/postcss";
 
 const config: Config = {
   content: [
@@ -9,11 +10,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#3b82f6", // Bleu
-        secondary: "#10b981", // Vert
+        primary: "#3b82f6",
+        secondary: "#10b981",
       },
     },
   },
   plugins: [],
 };
+
 export default config;

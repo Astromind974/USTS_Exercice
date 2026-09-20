@@ -3,11 +3,20 @@ export interface Email {
   sender: string;
   subject: string;
   content: string;
-  date: string; // ISO date string
+  date: string;
+  replies?: Reply[];
 }
 
 export interface Reply {
-  to: string;
-  subject: string;
+  id: string;
+  emailId: string;
   content: string;
+  isAuto: boolean;
+  createdAt: string;
+}
+
+export interface Summary {
+  id: string;
+  content: string;
+  date: string;
 }
