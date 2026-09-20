@@ -1,0 +1,23 @@
+[
+  {
+    "id": "1",
+    "sender": "test@example.com",
+    "subject": "Test Subject 1",
+    "content": "Ceci est un test d'e-mail pour le projet USTS. Il permet de vérifier que l'interface fonctionne correctement.",
+    "date": "2026-09-19T10:00:00Z"
+  },
+  {
+    "id": "2",
+    "sender": "another@example.com",
+    "subject": "Autre e-mail important",
+    "content": "Un autre exemple d'e-mail avec un contenu plus long pour tester l'affichage et le clipping du texte.",
+    "date": "2026-09-19T11:00:00Z"
+  },
+  {
+    "id": "3",
+    "sender": "admin@usts.fr",
+    "subject": "Réunion demain",
+    "content": "Rappel : Réunion à 14h en salle B203. Ordre du jour : validation du projet.",
+    "date": "2026-09-19T12:30:00Z"
+  }
+]
