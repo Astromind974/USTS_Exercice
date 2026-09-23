@@ -1,0 +1,96 @@
+/* src/styles/globals.css */
+@import "tailwindcss";
+@import "tailwindcss/utilities";
+
+/* ===== Variables CSS pour le thème ===== */
+:root {
+  --foreground-rgb: 30, 41, 59; /* slate-800 */
+  --background-start-rgb: 243, 244, 246; /* slate-100 */
+  --background-end-rgb: 255, 255, 255; /* blanc */
+  --primary-color: 59, 130, 246; /* bleu */
+  --secondary-color: 16, 185, 129; /* vert */
+  --border-color: 203, 213, 225; /* slate-300 */
+}
+
+/* Thème sombre */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 243, 244, 246; /* slate-100 */
+    --background-start-rgb: 30, 41, 59; /* slate-800 */
+    --background-end-rgb: 17, 24, 39; /* slate-900 */
+    --border-color: 51, 65, 85; /* slate-700 */
+  }
+}
+
+/* ===== Styles de base ===== */
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--background-start-rgb)),
+    rgb(var(--background-end-rgb))
+  );
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+}
+
+/* ===== Styles pour Tailwind ===== */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold text-slate-800 dark:text-slate-100;
+  }
+
+  p {
+    @apply text-slate-700 dark:text-slate-300;
+  }
+
+  a {
+    @apply text-blue-600 dark:text-blue-400 hover:underline;
+  }
+
+  button {
+    @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+  }
+}
+
+/* ===== Styles personnalisés pour les cartes ===== */
+@layer components {
+  .email-card {
+    @apply bg-white dark:bg-slate-800
+           shadow-md dark:shadow-lg
+           border border-slate-200 dark:border-slate-700
+           rounded-lg p-4 mb-4
+           hover:shadow-xl transition-shadow duration-200
+           w-full max-w-[90vw] mx-auto; /* Largeur max de 90% de la viewport sur mobile */
+  }
+
+  .summary-section {
+    @apply bg-blue-50 dark:bg-slate-700
+           border border-blue-200 dark:border-slate-600
+           rounded-lg p-4 mb-6
+           text-slate-800 dark:text-slate-100;
+  }
+
+  .filter-section {
+    @apply bg-white dark:bg-slate-800
+           border border-slate-200 dark:border-slate-700
+           rounded-lg p-4 mb-6
+           w-full max-w-[90vw] mx-auto; /* Largeur max sur mobile */
+  }
+}
+
+/* ===== Classes utilitaires pour le responsive ===== */
+@layer utilities {
+  /* Remplace text-responsive par des classes Tailwind standard */
+  .text-xs-sm {
+    @apply text-xs sm:text-sm;
+  }
+
+  .text-sm-md {
+    @apply text-sm md:text-base;
+  }
+
+  .text-md-lg {
+    @apply text-base md:text-lg;
+  }
+}

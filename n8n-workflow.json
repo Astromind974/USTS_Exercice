@@ -1,0 +1,502 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        144,
+        16
+      ],
+      "id": "28b00a07-bf95-4505-87f8-3a3234dffeca",
+      "name": "Get many messages",
+      "webhookId": "39043d7c-9507-4474-a61b-ac04474b4b70",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "xLabFtVqDFh6DG0a",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fonction pour extraire l'adresse e-mail propre\nconst extractEmail = (str) => {\n  if (!str) return '';\n  const match = str.match(/<([^>]+)>/);\n  return match ? match[1] : str;\n};\n\n// Mappage de tous les e-mails vers le schéma attendu par Prisma\nconst emailsList = $input.all().map(item => {\n  const email = item.json;\n\n  // Gestion de la date (conversion Unix timestamp -> ISO string)\n  const formattedDate = email.internalDate \n    ? new Date(parseInt(email.internalDate)).toISOString() \n    : (email.date ? new Date(email.date).toISOString() : new Date().toISOString());\n\n  return {\n    id: email.id,\n    sender: extractEmail(email.From || email.sender),\n    subject: email.Subject || email.subject || '(Sans objet)',\n    content: email.snippet || email.body || email.content || '',\n    date: formattedDate\n  };\n});\n\n// Envoi d'un objet unique englobant le tableau sous la clé \"emails\"\nreturn [\n  {\n    json: {\n      emails: emailsList\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        16
+      ],
+      "id": "ade2d51e-cfde-4e52-bbb9-ce8128a791c9",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.178.169:3000/api/emails",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        560,
+        16
+      ],
+      "id": "6d4fae5c-52d9-4750-8fad-22e7cedbfde7",
+      "name": "HTTP Request",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -80,
+        16
+      ],
+      "id": "379f57aa-5ef9-4896-85be-ed2de950a049",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "send-reply",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        272
+      ],
+      "id": "3c6a024b-d6ee-409e-8b7f-5cc2e341b0d4",
+      "name": "Webhook",
+      "webhookId": "f5bdf8fc-d66b-4bfc-a2d1-c07e6e11ca4d"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').item.json.body.to }}",
+        "subject": "={{ $('Webhook').item.json.body.subject }}",
+        "emailType": "text",
+        "message": "={{ $('Webhook').item.json.body.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        336
+      ],
+      "id": "9291e43b-e7dc-4822-8ef5-7924048e430c",
+      "name": "Send a message",
+      "webhookId": "7f13b3da-0b16-488c-b9be-04edb78ab332",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "xLabFtVqDFh6DG0a",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"gmailMessageId\": \"{{ $json.gmailMessageId }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        960,
+        256
+      ],
+      "id": "761e277c-2ee0-44f8-aa7b-5b5c778b2986",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ba492b20-cf01-429e-9270-c3adef8d788e",
+              "leftValue": "={{ $json.body.isAuto }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        272
+      ],
+      "id": "d204f540-2076-4cae-b9a8-3d745685717e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  JSON.stringify({\n    model: \"openai/gpt-oss-120b\",\n    messages: [\n      {\n        role: \"system\",\n        content: \"Tu es un assistant e-mail professionnel. Rédige une réponse courtoise, claire et pertinente en français. IMPORTANT : Ne génère AUCUNE signature, aucun nom, prénom, rôle ou coordonnées à la fin du message. Ne mets aucun crochet comme [Votre Nom]. Termine ton message simplement après la formule de politesse.\"\n      },\n      {\n        role: \"user\",\n        content: `Voici l'e-mail auquel tu dois répondre :\\n---\\n${$('Webhook').item.json.body.originalContent || ''}\\n---\\n\\nConsignes particulières :\\n${$('Webhook').item.json.body.content || 'Rédige une réponse adaptée et professionnelle à cet e-mail.'}`\n      }\n    ]\n  })\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        432,
+        176
+      ],
+      "id": "dac02a23-6ac1-4c82-94e6-cb5fe7e82595",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "zcZRvNd6ZR6g2P9y",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').item.json.body.to }}",
+        "subject": "={{ $('Webhook').item.json.body.subject }}",
+        "emailType": "text",
+        "message": "={{ $('HTTP Request1').item.json.choices[0].message.content }}\n\n--\n\nClément Chellier\nÉtudiant 4ème année\nEPITECH\n0692952525",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        608,
+        176
+      ],
+      "id": "64e8e826-6f7e-44ec-a485-0ee7cf372fe4",
+      "name": "Send a message1",
+      "webhookId": "7f13b3da-0b16-488c-b9be-04edb78ab332",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "xLabFtVqDFh6DG0a",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "http://192.168.178.169:3000/api/reply",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"replyId\": \"{{ $('Webhook').item.json.body.replyId }}\",\n  \"gmailMessageId\": \"{{ $json.id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        784,
+        176
+      ],
+      "id": "49fa6821-4f5c-404e-9dbd-be480608952d",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "http://192.168.178.169:3000/api/reply",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"replyId\": \"{{ $('Webhook').item.json.body.replyId }}\",\n  \"gmailMessageId\": \"{{ $json.id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        656,
+        336
+      ],
+      "id": "fafbef2a-2057-4b71-9912-6dd8229b916a",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n  JSON.stringify({\n    \"model\": \"openai/gpt-oss-120b\",\n    \"messages\": [\n      {\n        \"role\": \"system\",\n        \"content\": \"Tu es un assistant exécutif. Génère un résumé synthétique, structuré et professionnel en français des e-mails reçus aujourd'hui. Organise le résumé avec des puces claires : 1. Points prioritaires / Urgents, 2. Synthèse générale, 3. Actions requises si nécessaire. N'ajoute pas d'en-tête inutile.\"\n      },\n      {\n        \"role\": \"user\",\n        \"content\": $json.hasEmails \n          ? \"Voici les e-mails du jour à résumer :\\n\\n\" + $json.promptText \n          : \"Aucun e-mail n'a été reçu aujourd'hui. Indique simplement qu'il n'y a pas d'activité à signaler.\"\n      }\n    ],\n    \"temperature\": 0.3\n  })\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        976,
+        16
+      ],
+      "id": "70e7b644-72e7-4e03-b376-62eb239a5d9e",
+      "name": "HTTP Request4",
+      "executeOnce": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "zcZRvNd6ZR6g2P9y",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupération de tous les éléments reçus du nœud HTTP Request\nconst items = $input.all();\n\nlet emails = [];\n\nif (items.length > 0 && items[0].json) {\n  // Cas A : Si la clé \"emails\" existe\n  if (Array.isArray(items[0].json.emails)) {\n    emails = items[0].json.emails;\n  } \n  // Cas B : Si n8n a séparé chaque e-mail en un élément individuel (cas de Next.js)\n  else {\n    emails = items\n      .map(item => item.json)\n      .filter(e => e && (e.sender || e.subject || e.content || e.id));\n  }\n}\n\n// S'il n'y a aucun e-mail\nif (emails.length === 0) {\n  return [{\n    json: {\n      promptText: \"Aucun e-mail reçu aujourd'hui.\",\n      hasEmails: false\n    }\n  }];\n}\n\n// Construction du texte formaté pour l'IA\nconst formattedMailsText = emails.map((mail, index) => {\n  return `--- E-mail ${index + 1} ---\nExpéditeur : ${mail.sender || mail.from || 'Inconnu'}\nObjet : ${mail.subject || 'Sans objet'}\nDate : ${mail.date || ''}\nContenu : ${mail.content || mail.snippet || ''}\n`;\n}).join('\\n');\n\nreturn [{\n  json: {\n    promptText: formattedMailsText,\n    hasEmails: true,\n    totalMails: emails.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        784,
+        16
+      ],
+      "id": "71fa8361-0e99-49f9-8dd3-ba8512ef65c9",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const groqResponse = $input.first().json;\n\n// Extraction de la réponse texte générée par Groq\nconst summaryContent = groqResponse.choices?.[0]?.message?.content || \"Impossible de générer le résumé.\";\n\nreturn [{\n  json: {\n    summary: summaryContent,\n    createdAt: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        16
+      ],
+      "id": "d351c8d6-9ac5-4d6e-a163-4b9ee6a9867d",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.178.169:3000/api/summary",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1392,
+        16
+      ],
+      "id": "2d03c85b-9353-4d8a-9b0e-572fa86742a1",
+      "name": "HTTP Request5",
+      "executeOnce": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8144cd15-76fe-44e1-a2b4-f9e4e99afee8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "10dc6f67c961916770eb21f9f28d4f162f67bc649f8743ab60661e3ac8f4dde4"
+  },
+  "nodeGroups": [],
+  "id": "W1PwmnUBrmasr0kc",
+  "tags": []
+}
