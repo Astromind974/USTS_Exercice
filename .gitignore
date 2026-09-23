@@ -36,3 +36,11 @@ yarn-error.log*
 next-env.d.ts
 
 n8n
+dev.db
+# Base de données SQLite locales
+*.db
+*.db-journal
+dev.db
+dev.db-journal
+prisma/dev.db
+prisma/migration
