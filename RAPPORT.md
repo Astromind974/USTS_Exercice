@@ -128,13 +128,3 @@ L'application repose sur un couplage hybride entre un frontend/backend Next.js p
 ├── RAPPORT.md              # Le présent rapport
 └── README.md               # Instructions de démarrage rapide
 ```
-
-*(Note : N'oubliez pas de vérifier que `lilgar77` et `Holo795` ont bien été ajoutés comme collaborateurs dans les paramètres de votre dépôt GitHub).*
-```
-eof
-
----
-
-Votre projet est maintenant prêt pour la remise finale ! Vous disposez du code, de l'export n8n, du fichier `mails-today.json` et de ce rapport détaillé.
-
-Souhaitez-vous que je transforme également ce rapport en une présentation de diapositives (slides) ?
